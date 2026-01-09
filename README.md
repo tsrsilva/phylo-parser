@@ -1,6 +1,6 @@
 # Phylo Parser: Ontology-Aware Phylogenetic Character Parser
 
-[![CI/CD Pipeline](https://github.com/tsrsilva/phylo-parser/actions/workflows/ci_cd.yaml/badge.svg)](https://github.com/tsrsilva/phylo-parser/actions)
+[![CI/CD Pipeline](https://github.com/tsrsilva/phylo-parser/actions/workflows/ci_cd.yml/badge.svg)](https://github.com/tsrsilva/phylo-parser/actions)
 
 A Python tool that automatically parses **phenotypic character lists** (TXT) and maps character components to biological ontologies, producing structured CSV and JSON outputs suitable for **downstream semantic workflows**.
 
