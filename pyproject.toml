@@ -37,9 +37,6 @@ line-length = 88
 [tool.ruff]
 select = ["E", "F", "I"]
 
-[tool.poetry.dev-dependencies]
-python-semantic-release = "^8.23.0"
-
 [tool.semantic_release]
 version_variable = "phylo_parser/__init__.py:__version__"
 upload_to_pypi = false

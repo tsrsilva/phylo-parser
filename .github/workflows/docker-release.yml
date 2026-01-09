@@ -1,82 +1,64 @@
-name: Release Docker Image
+# .github/workflows/docker-release.yml
+name: Docker Release
 
 on:
   push:
     branches:
-      - main  # Trigger on pushes to main branch
+      - main
 
 jobs:
   release:
-    name: Release Docker Image
+    name: Build & Publish Docker Image
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: write # Needed for semantic-release to create tags
-      id-token: write # Needed if using OIDC for Docker login
+    env:
+      DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+      DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
 
     steps:
-      # ----------------------------
       # 1. Checkout repository
-      # ----------------------------
-      - name: Checkout code
+      - name: Checkout repo
         uses: actions/checkout@v3
 
-      # ----------------------------
-      # 2. Set up Python
-      # ----------------------------
+      # 2. Set up Python 3.11
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.11"
+          python-version: 3.11
 
-      # ----------------------------
-      # 3. Install dependencies
-      # ----------------------------
+      # 3. Install dependencies including semantic-release
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install python-semantic-release
+          pip install -r requirements.txt
+          pip install python-semantic-release[github]
 
-      # ----------------------------
-      # 4. Determine next version via semantic-release
-      # ----------------------------
-      - name: Run semantic-release
-        id: semrel
+      # 4. Run semantic-release to bump version & create tag
+      - name: Semantic Release
+        run: python -m semantic_release publish
+
+      # 5. Build Docker image
+      - name: Build Docker image
         run: |
-          semantic-release publish --no-pypi
-      # semrel.outputs.new_version will contain the computed version
+          IMAGE_TAG=${{ github.ref_name }}
+          echo "Building image phylo-parser:${IMAGE_TAG}"
+          docker build -t ${DOCKER_HUB_USERNAME}/phylo-parser:${IMAGE_TAG} .
 
-      # ----------------------------
-      # 5. Set up Docker Buildx (for multi-arch)
-      # ----------------------------
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      # ----------------------------
       # 6. Log in to Docker Hub
-      # ----------------------------
-      - name: Log in to Docker Hub
+      - name: Docker login
         uses: docker/login-action@v2
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
-      # ----------------------------
-      # 7. Build and push Docker image
-      # ----------------------------
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          file: ./Dockerfile
-          push: true
-          platforms: linux/amd64,linux/arm64
-          tags: |
-            dockerhub_username/phylo-parser:${{ steps.semrel.outputs.new_version }}
-            dockerhub_username/phylo-parser:latest
+      # 7. Push Docker image to Docker Hub
+      - name: Push Docker image
+        run: |
+          IMAGE_TAG=${{ github.ref_name }}
+          docker push ${DOCKER_HUB_USERNAME}/phylo-parser:${IMAGE_TAG}
 
-      # ----------------------------
-      # 8. Optional: output Docker tag for downstream jobs
-      # ----------------------------
-      - name: Set output Docker tag
-        run: echo "DOCKER_TAG=${{ steps.semrel.outputs.new_version }}" >> $GITH
+      # 8. Optional: tag 'latest' for convenience
+      - name: Tag latest
+        run: |
+          docker tag ${DOCKER_HUB_USERNAME}/phylo-parser:${{ github.ref_name }} ${DOCKER_HUB_USERNAME}/phylo-parser:latest
+          docker push ${DOCKER_HUB_USERNAME}/phylo-parser:latest
