@@ -41,3 +41,4 @@ select = ["E", "F", "I"]
 version_variable = "phylo_parser/__init__.py:__version__"
 upload_to_pypi = false
 branch = "main"
+tag_format = "v{version}"  # default
