@@ -12,9 +12,9 @@ A Python tool that automatically parses **phenotypic character lists** (TXT) and
 - Maps terms to **ontology URIs** (AISM, HAO, BSPO, PATO)
 - Resolves **synonyms** via ontology queries
 - Generates:
-- Structured **CSV outputs**
-    - Nested, semantically meaningful **JSON outputs**
-    - Identifies and reports **missing ontology mappings**
+  - Structured **CSV outputs**
+  - Nested, semantically meaningful **JSON outputs**
+  - Identifies and reports **missing ontology mappings**
 
 ---
 
@@ -64,9 +64,9 @@ This will:
 - Build the Docker image
 - Run the container
 - Automatically:
-    - load the ontologies 
-    - parse all ```.txt``` files in ```data/```
-- Generate ```.csv``` and ```.json``` outputs in:
+    - Load the ontologies 
+    - Parse all ```.txt``` files in ```data/``` 
+- Generate outputs in:
     - ```output_csv/```
     - ```output_json/```
     - ```missing_uris```
@@ -90,8 +90,8 @@ If you prefer to run natively on Python:
 python phylo_parser/main.py
 ```
 
-- Ensure all dependencies from ```requirements.txt``` are installed (or from ```environment.yml``` if your working with a conda environment)
-- Make sure the ```data/```, ```configs/```, and ```dicts/``` directories are present in your project root
+- Ensure all dependencies from ```requirements.txt``` are installed (or from ```environment.yml``` if using conda)
+- Make sure the ```data/```, ```configs/```, and ```dicts/``` directories exist in the project root
 - Outputs will be saved according to the paths defined in configs/config.yaml
 
 ## Output overview
@@ -109,7 +109,7 @@ python phylo_parser/main.py
     - Locators
     - Variable (when applicable)
     - States
-    - Statement type tag (i.e. neomorphic, transformational simple, transformational complex)
+    - Statement type tag (neomorphic, transformational simple, transformational complex)
 
 ### Missing terms
 

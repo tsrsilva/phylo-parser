@@ -8,9 +8,11 @@ __pycache__/
 *.egg-info/
 *.egg
 *.dist-info/
-*.log
+build/
 
+# =========================
 # Virtual environments
+# =========================
 env/
 tool2_env/
 .venv/
@@ -20,19 +22,24 @@ venv/
 # Conda
 # =========================
 *.conda
-*.env
 conda-meta/
 
 # =========================
 # Docker
 # =========================
-*.dockerignore
 docker-compose.override.yml
 docker-compose.override.yaml
 docker-compose.*.yml
 
-# Ignore container outputs if you don't want to track them
-outputs/
+# =========================
+# Project outputs (DO NOT TRACK)
+# =========================
+output_csv/
+output_json/
+missing_uris/
+
+# Optional: generated dicts if auto-created
+# dicts/
 
 # =========================
 # IDEs and editors
