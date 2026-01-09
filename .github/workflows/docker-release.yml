@@ -20,6 +20,8 @@ jobs:
       # 1. Checkout repository
       - name: Checkout repo
         uses: actions/checkout@v3
+        with:
+            fetch-depth: 0  # Fetch all history for semantic-release
 
       # 2. Set up Python 3.11
       - name: Set up Python
