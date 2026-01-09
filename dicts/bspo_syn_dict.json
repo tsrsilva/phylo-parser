@@ -1,0 +1,20 @@
+{
+  "posterior to (developmentally)": "http://purl.obolibrary.org/obo/BSPO_0001114",
+  "anterior to (developmentally)": "http://purl.obolibrary.org/obo/BSPO_1000000",
+  "lateral (radial) to": "http://purl.obolibrary.org/obo/BSPO_1000000",
+  "medial (tibial) to": "http://purl.obolibrary.org/obo/BSPO_1000000",
+  "affects": "http://purl.obolibrary.org/obo/RO_0002418",
+  "median plane": "http://purl.obolibrary.org/obo/BSPO_0000009",
+  "superior-inferior axis": "http://purl.obolibrary.org/obo/BSPO_0000011",
+  "longitudinal axis": "http://purl.obolibrary.org/obo/BSPO_0000014",
+  "cross-section": "http://purl.obolibrary.org/obo/BSPO_0000400",
+  "coronal section": "http://purl.obolibrary.org/obo/BSPO_0000019",
+  "frontal section": "http://purl.obolibrary.org/obo/BSPO_0000019",
+  "cranial": "http://purl.obolibrary.org/obo/BSPO_0000022",
+  "caudal": "http://purl.obolibrary.org/obo/BSPO_0000025",
+  "dorsal-ventral axis": "http://purl.obolibrary.org/obo/BSPO_0000195",
+  "proximal-distal axis": "http://purl.obolibrary.org/obo/BSPO_0000196",
+  "proximal-distal axis ": "http://purl.obolibrary.org/obo/BSPO_0001001",
+  "single organism process": "http://purl.obolibrary.org/obo/GO_0008150",
+  "single-organism process": "http://purl.obolibrary.org/obo/GO_0008150"
+}

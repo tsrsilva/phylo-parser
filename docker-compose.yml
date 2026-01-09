@@ -1,0 +1,23 @@
+version: "3.9"
+
+services:
+  phylo-parser:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: phylo-parser
+    volumes:
+      # Input data (includes your 'examples/' folder)
+      - ./data:/app/data:cached
+      # Dictionaries
+      - ./dicts:/app/dicts:cached
+      # Configuration files
+      - ./configs:/app/configs:cached
+      # Output directories
+      - ./output_csv:/app/output_csv
+      - ./output_json:/app/output_json
+      - ./missing_uris:/app/missing_uris
+    working_dir: /app
+    command: ["python", "-m", "phylo_parser"]
+    environment:
+      PYTHONUNBUFFERED: 1

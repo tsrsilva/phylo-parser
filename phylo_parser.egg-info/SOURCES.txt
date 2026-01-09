@@ -1,0 +1,9 @@
+README.md
+pyproject.toml
+LICENSES/MIT.txt
+phylo_parser/main.py
+phylo_parser.egg-info/PKG-INFO
+phylo_parser.egg-info/SOURCES.txt
+phylo_parser.egg-info/dependency_links.txt
+phylo_parser.egg-info/requires.txt
+phylo_parser.egg-info/top_level.txt

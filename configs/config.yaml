@@ -1,0 +1,12 @@
+# config.yaml
+
+input:
+  data_dir: "data/examples"
+
+resources:
+  dicts_dir: "dicts"
+
+output:
+  csv_dir: "output_csv"
+  json_dir: "output_json"
+  missing_dir: "missing_uris"

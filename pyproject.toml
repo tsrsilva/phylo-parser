@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "phylo-parser"
+version = "0.1.0"
+description = "Ontology-aware parser for phenotypic character matrices"
+readme = "README.md"
+license = { file = "LICENSES/MIT.txt" }
+authors = [
+  { name = "Thiago S. R. Silva" },
+  { name = "Diego S. Porto" }
+]
+requires-python = ">=3.10"
+
+dependencies = [
+  "pandas>=2.3.1",
+  "rdflib>=7.1.4",
+  "pyyaml>=6.0.3"
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest",
+  "black",
+  "ruff"
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["phylo_parser*"]
+
+[tool.black]
+line-length = 88
+
+[tool.ruff]
+select = ["E", "F", "I"]
+
+[tool.poetry.dev-dependencies]
+python-semantic-release = "^8.23.0"
+
+[tool.semantic_release]
+version_variable = "phylo_parser/__init__.py:__version__"
+upload_to_pypi = false
+branch = "main"
