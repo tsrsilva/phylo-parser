@@ -141,8 +141,6 @@ def main() -> None:
         prefix = txt_path.stem
         print(f"Processing {prefix}")
 
-        # ------------------ PARSE CHARACTER LIST ------------------ #
-
         char_ls_dict = {}
 
         with open(txt_path, "r") as file:
@@ -150,105 +148,112 @@ def main() -> None:
                 char_id, char_rest = line.strip().split(".", 1)
                 char_text, state_text = char_rest.strip().split(":", 1)
 
-                char_text_s = [w.strip().lower() for w in char_text.split(",")]
-                char_text_d = {}
+                char_text_s = [w.strip().lower() for w in char_text.split(",") if w.strip()]
+                if not char_text_s:
+                    continue
 
-                for ent in char_text_s:
-                    match = re.match(r"^(.+?)\s*\[\s*(.+?)\s*\]$", ent)
-                    if match:
-                        label, comment = match.groups()
-                        char_text_d["Variable"] = [
-                            label.strip(),
-                            ent_dict.get(label.strip(), label.strip()),
-                            comment.strip()
-                        ]
-                    else:
-                        ent_id = ent_dict.get(ent) or syn_dict.get(ent, "")
-                        char_text_d[ent] = ent_id
+                char_text_d = {
+                    "_organism": None,
+                    "_locators": [],
+                    "_variable": None
+                }
 
+                # 1️⃣ First term = organism
+                organism_term = char_text_s[0]
+                organism_id = ent_dict.get(organism_term) or syn_dict.get(organism_term, "")
+                char_text_d["_organism"] = (organism_term, organism_id)
+
+                # 2️⃣ Parse states first to detect neomorphic
                 state_matches = re.findall(r'\s*([^\(\):;"]+?)\s*\((\d+)\)', state_text)
                 state_dict = {}
-
+                state_labels = []
                 for state, token in state_matches:
                     pato_id = pato_dict.get(state) or pato_syn_dict.get(state, "")
                     state_dict[token] = {state: pato_id}
+                    state_labels.append(state.lower())
 
-                final_dict = {"char_part": char_text_d, "state_part": state_dict, "tag": ""}
-
-                labels = [list(v.keys())[0] for v in state_dict.values()]
-                if {"absent", "present"} & set(labels):
-                    final_dict["tag"] = "neomorphic"
-                    final_dict["char_part"]["Variable"] = ""
+                if {"absent", "present"} & set(state_labels):
+                    # Neomorphic: all terms after organism → Locators; no Variable
+                    for locator_term in char_text_s[1:]:
+                        locator_id = ent_dict.get(locator_term) or syn_dict.get(locator_term, "")
+                        char_text_d["_locators"].append((locator_term, locator_id))
+                    tag = "neomorphic"
                 else:
-                    var = char_text_d.get("Variable")
-                    final_dict["tag"] = (
-                        "transformational_complex"
-                        if isinstance(var, list) and var[2]
-                        else "transformational_simple"
-                    )
+                    # Transformational: last term before colon → Variable
+                    variable_term = char_text_s[-1]
+                    match = re.match(r"^(.+?)\s*\[\s*(.+?)\s*\]$", variable_term)
+                    if match:
+                        # Transformational complex (Variable + comment)
+                        label, comment = match.groups()
+                        var_uri = ent_dict.get(label.strip())
+                        char_text_d["_variable"] = [label.strip(), var_uri, comment.strip()]
+                    else:
+                        # Transformational simple (Variable without comment)
+                        var_uri = ent_dict.get(variable_term) or syn_dict.get(variable_term, None)
+                        char_text_d["_variable"] = [variable_term, var_uri, None]
 
-                char_ls_dict[char_id] = final_dict
+                    # Terms between first and last → Locators
+                    for locator_term in char_text_s[1:-1]:
+                        locator_id = ent_dict.get(locator_term) or syn_dict.get(locator_term, "")
+                        char_text_d["_locators"].append((locator_term, locator_id))
+
+                    # Tag assignment
+                    var = char_text_d["_variable"]
+                    tag = "transformational_complex" if isinstance(var, list) and var[2] else "transformational_simple"
+
+                char_ls_dict[char_id] = {
+                    "char_part": char_text_d,
+                    "state_part": state_dict,
+                    "tag": tag
+                }
 
         # ------------------ CHARACTER PART DF ------------------ #
+        max_locators = max(len(data["char_part"]["_locators"]) for data in char_ls_dict.values())
+        base_columns = ["Organism_label", "Organism_ID"]
+        locator_columns = [f"Locator_{i}_{x}" for i in range(1, max_locators+1) for x in ("label", "ID")]
+        variable_columns = ["Variable_label", "Variable_ID", "Variable_comment"]
+        ALL_COLUMNS = base_columns + locator_columns + variable_columns
 
         char_dict_org = {}
         for char, data in char_ls_dict.items():
-            loc_c = len(data["char_part"]) - 2
-            keys = ["Organism_label", "Organism_ID"]
-            for i in range(1, loc_c + 1):
-                keys += [f"Locator_{i}_label", f"Locator_{i}_ID"]
-            keys += ["Variable_label", "Variable_ID", "Variable_comment"]
+            row = {col: "" for col in ALL_COLUMNS}
+            # Organism
+            if data["char_part"]["_organism"]:
+                row["Organism_label"], row["Organism_ID"] = data["char_part"]["_organism"]
+            # Locators
+            for i, (label, uri) in enumerate(data["char_part"]["_locators"], start=1):
+                row[f"Locator_{i}_label"] = label
+                row[f"Locator_{i}_ID"] = uri
+            # Variable
+            var = data["char_part"]["_variable"]
+            if isinstance(var, list):
+                row["Variable_label"] = var[0]
+                row["Variable_ID"] = var[1]
+                row["Variable_comment"] = var[2]
+            char_dict_org[char] = row
 
-            vals = []
-            for k, v in data["char_part"].items():
-                if k == "Variable" and isinstance(v, list):
-                    vals += v[:2]
-                else:
-                    vals += [k, v]
-
-            comment = v[2] if isinstance(data["char_part"].get("Variable"), list) else ""
-            vals.append(comment)
-
-            char_dict_org[char] = dict(zip(keys, vals))
-
-        char_df = pd.DataFrame.from_dict(char_dict_org, orient="index").fillna("")
+        char_df = pd.DataFrame.from_dict(char_dict_org, orient="index").reindex(columns=ALL_COLUMNS).fillna("")
         char_df.to_csv(DIR_OUTPUT_CSV / f"{prefix}_char_part.csv", index=True, index_label="CH_ID")
 
         # ------------------ STATE PART DF ------------------ #
-
         state_dict_org = {}
         for char, data in char_ls_dict.items():
             lst = []
             for token, state in data["state_part"].items():
                 lst += [*state.keys(), *state.values(), token]
-            keys = [f"{x}_{i}" for i in range(1, len(lst)//3 + 1)
-                    for x in ("state_label", "state_ID", "token")]
+            keys = [f"{x}_{i}" for i in range(1, len(lst)//3+1) for x in ("state_label", "state_ID", "token")]
             state_dict_org[char] = dict(zip(keys, lst))
 
         state_df = pd.DataFrame.from_dict(state_dict_org, orient="index").fillna("")
         state_df.to_csv(DIR_OUTPUT_CSV / f"{prefix}_state_part.csv", index=False)
 
         # ------------------ FULL DF ------------------ #
-
         final_df = pd.concat([char_df, state_df], axis=1)
         final_df["tag"] = [v["tag"] for v in char_ls_dict.values()]
         final_df.to_csv(DIR_OUTPUT_CSV / f"{prefix}_full.csv", index=True, index_label="Char_ID")
 
         # ------------------ JSON EXPORTS ------------------ #
-
-        loc_c = max(
-            (sum(1 for k in v["char_part"] if k not in ("Variable"))
-            for v in char_ls_dict.values()),
-            default=0
-        )
-
-        state_c = max(
-            (len(v["state_part"]) for v in char_ls_dict.values()),
-            default=0
-        )
-
         final_json = []
-
         for char_id, char_data in char_ls_dict.items():
             tag = char_data["tag"]
             row = final_df.loc[char_id]
@@ -261,60 +266,37 @@ def main() -> None:
                 },
                 "Locators": []
             }
-
-            # ------------------------------
             # Locators
-            # ------------------------------
-            loc_keys = [k for k in char_data["char_part"].keys()
-                    if k != "Variable" and k != row["Organism_label"]]
-            
-            for i, loc_label in enumerate(loc_keys, start=1):
-                loc_uri = char_data["char_part"][loc_label]  # from ontology dictionary
+            for i, (label, uri) in enumerate(char_data["char_part"]["_locators"], start=1):
                 entry["Locators"].append({
-                    f"Locator {i} label": loc_label,
-                    f"Locator {i} URI": loc_uri if loc_uri else None
+                    f"Locator {i} label": label,
+                    f"Locator {i} URI": uri if uri else None
                 })
-
-            # ------------------------------
-            # Variable (only if not neomorphic)
-            # ------------------------------
-            if tag != "neomorphic" and "Variable" in char_data["char_part"]:
-                var_label, var_uri, var_comment = char_data["char_part"]["Variable"]
-                variable_obj = {
+            # Variable
+            if tag != "neomorphic" and char_data["char_part"]["_variable"]:
+                var_label, var_uri, var_comment = char_data["char_part"]["_variable"]
+                entry["Variable"] = {
                     "Variable label": var_label,
-                    "Variable URI": var_uri if var_uri else None
+                    "Variable URI": var_uri if var_uri else None,
+                    **({"Variable comment": var_comment} if tag == "transformational_complex" else {})
                 }
-                if tag == "transformational_complex":
-                    variable_obj["Variable comment"] = var_comment
-                # Insert Variable immediately after Locators
-                entry["Variable"] = variable_obj
-
-            # ------------------------------
             # States
-            # ------------------------------
             entry["States"] = []
-
             for i, (token, state_dict) in enumerate(char_data["state_part"].items()):
-                # state_dict is {state_label: state_URI}
                 state_label, state_uri = list(state_dict.items())[0]
                 entry["States"].append({
                     f"State {i} label": state_label if state_label else "",
                     f"State {i} URI": state_uri if state_uri else None,
                     f"State {i} token": token
                 })
-
-            # ------------------------------
-            # Statement Type Tag
-            # ------------------------------
+            # Tag
             entry["Tag"] = tag
-
             final_json.append(entry)
 
         with open(DIR_OUTPUT_JSON / f"{prefix}_full.json", "w") as f:
             json.dump(final_json, f, indent=2)
 
         # ------------------ MISSING TERMS ------------------ #
-
         missing = set()
         for _, row in final_df.iterrows():
             for col in final_df.columns:
@@ -328,12 +310,12 @@ def main() -> None:
             writer.writerow(["Missing term"])
             for term in sorted(missing):
                 writer.writerow([term])
-
+    
     # ---- Process all TXT files ---- #
 
     for txt_file in sorted(DIR_DATA.glob("*.txt")):
         process_character_file(txt_file)
-    
+
 # ======================================================
 # RUN MAIN IF MODULE EXECUTED
 # ======================================================
