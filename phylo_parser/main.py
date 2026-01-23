@@ -300,7 +300,7 @@ def main() -> None:
         missing = set()
         for _, row in final_df.iterrows():
             for col in final_df.columns:
-                if col.endswith("_ID") and row[col] == "":
+                if "_ID" in col and row[col] == "":
                     label_col = col.replace("_ID", "_label")
                     if label_col in final_df.columns:
                         missing.add(row[label_col])
