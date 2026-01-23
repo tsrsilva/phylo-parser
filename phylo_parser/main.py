@@ -103,10 +103,18 @@ def main() -> None:
     syn_query = """
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
     PREFIX oboI: <http://www.geneontology.org/formats/oboInOwl#>
-    SELECT ?label ?term ?syn
+    SELECT ?label ?term ?syn ?synType
     WHERE {
         ?term rdfs:label ?label .
-        ?term oboI:hasRelatedSynonym ?syn .
+        {
+            ?term oboI:hasExactSynonym ?syn .
+            BIND("exact" AS ?synType)
+        }
+        UNION
+        {
+            ?term oboI:hasRelatedSynonym ?syn .
+            BIND("related" AS ?synType)
+        }
     }
     """
 
