@@ -120,7 +120,7 @@ python phylo_parser/main.py
 ```graphql
 root/
 ├── phylo_parser/           # Main Python package with source code
-├── data/                   # Input character matrix files (.txt)
+├── data/                   # Input character list files (.txt)
 ├── dicts/                  # Ontology and synonym dictionaries
 ├── configs/                # YAML configuration files
 ├── output_csv/             # Generated CSV outputs
