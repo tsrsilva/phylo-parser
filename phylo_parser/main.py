@@ -10,15 +10,13 @@
 # ======================================================
 
 import pandas as pd 
-from rdflib import Graph, RDFS
 import json
 import yaml
 import re
 import csv
 from pathlib import Path
-
-import yaml
-from pathlib import Path
+from typing import cast, Any
+from rdflib import Graph, RDFS
 
 # ======================================================
 # HELPERS
@@ -124,9 +122,20 @@ def main() -> None:
     pato_syn = pato_g.query(syn_query)
 
     # Convert query results to a dictionary (for latter use).
-    hao_syn_dict = {str(r.syn): str(r.term) for r in hao_syn}
-    bspo_syn_dict = {str(r.syn): str(r.term) for r in bspo_syn}
-    pato_syn_dict = {str(r.syn): str(r.term) for r in pato_syn}
+    hao_syn_dict = {
+        str(cast(Any, r).asdict()["syn"]): str(cast(Any, r).asdict()["term"])
+        for r in hao_syn
+    }
+
+    bspo_syn_dict = {
+        str(cast(Any, r).asdict()["syn"]): str(cast(Any, r).asdict()["term"])
+        for r in bspo_syn
+    }
+
+    pato_syn_dict = {
+        str(cast(Any, r).asdict()["syn"]): str(cast(Any, r).asdict()["term"])
+        for r in pato_syn
+    }
 
     # Build composite dictionary for synonyms.
     syn_dict = bspo_syn_dict | hao_syn_dict
