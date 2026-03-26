@@ -33,9 +33,11 @@ jobs:
           # 1. Create host output directory
           mkdir -p ${{ github.workspace }}/outputs/csv
 
-          # 2. Run the container with the CI config mounted over the default one
+          # 2. Run the container with necessary mounts
           docker run --rm \
             -v ${{ github.workspace }}/configs/config.ci.yaml:/app/configs/config.yaml \
+            -v ${{ github.workspace }}/data:/app/data \
+            -v ${{ github.workspace }}/dicts:/app/dicts \
             -v ${{ github.workspace }}/outputs:/app/outputs \
             phylo-parser:test
 
