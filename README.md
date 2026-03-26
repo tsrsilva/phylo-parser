@@ -2,7 +2,7 @@
 
 [![CI/CD Pipeline](https://github.com/tsrsilva/phylo-parser/actions/workflows/remote.yml/badge.svg)](https://github.com/tsrsilva/phylo-parser/actions)
 
-A Python tool that automatically parses **phenotypic character lists** (TXT) and maps character components to biological ontologies, producing structured CSV and JSON outputs suitable for **downstream semantic workflows**.
+A Python tool that automatically parses **phenotypic character lists** (TXT) and maps character components to bio-ontologies, producing structured CSV and JSON outputs suitable for **downstream semantic workflows**.
 
 ---
 
