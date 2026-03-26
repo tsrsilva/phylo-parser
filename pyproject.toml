@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "phylo-parser"
-version = "0.1.0"
+version = "0.2.0"
 description = "Ontology-aware parser for phenotypic character matrices"
 readme = "README.md"
 license = { file = "LICENSES/MIT.txt" }
