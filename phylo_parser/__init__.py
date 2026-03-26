@@ -7,7 +7,7 @@ Phylo Parser
 Ontology-aware parser for phenotypic character matrices.
 """
 
-__version__ = "0.0.1"  # initial version; semantic-release will auto-bump
+__version__ = "0.1.0"
 
 from .main import main
 

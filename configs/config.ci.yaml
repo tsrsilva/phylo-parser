@@ -1,0 +1,12 @@
+# config.ci.yaml — used only inside CI; mounted over config.yaml in the container
+
+input:
+  data_dir: "data/examples"
+
+resources:
+  dicts_dir: "dicts"
+
+output:
+  csv_dir: "outputs/ci/csv"
+  json_dir: "outputs/ci/json"
+  missing_dir: "outputs/ci/missing"

@@ -1,0 +1,126 @@
+# .github/workflows/release.yml
+# SPDX-FileCopyrightText: 2026 Thiago S. R. Silva, Diego S. Porto
+# SPDX-License-Identifier: MIT
+
+name: CI/CD & Docker Release
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  # --- JOB 1: TEST ---
+  test:
+    name: Test Build & Run
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Test Image
+        run: docker build -t phylo-parser:test .
+
+      - name: Run Tool Test
+        run: |
+          # 1. Create host output directory
+          mkdir -p ${{ github.workspace }}/outputs/ci/csv
+
+          # 2. Run the container with the CI config mounted over the default one
+          docker run --rm \
+            -v ${{ github.workspace }}/configs/config.ci.yaml:/app/configs/config.yaml \
+            -v ${{ github.workspace }}/outputs:/app/outputs \
+            phylo-parser:test
+
+          # 3. Verify the output exists
+          if [ -f "${{ github.workspace }}/outputs/ci/csv/minimal_full.csv" ]; then
+            echo "✅ Test Passed: Output CSV generated successfully."
+          else
+            echo "❌ Test Failed: Output CSV not found."
+            exit 1
+          fi
+
+  # --- JOB 2: RELEASE ---
+  release:
+    name: Version & Publish
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+      DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Release Tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install "python-semantic-release[github]>=10,<11"
+
+      - name: Plan Semantic Release
+        id: release_plan
+        run: |
+          NEXT_TAG=$(semantic-release version --print-tag)
+          LAST_TAG=$(semantic-release version --print-last-released-tag || true)
+
+          echo "next_tag=$NEXT_TAG" >> $GITHUB_OUTPUT
+          echo "last_tag=$LAST_TAG" >> $GITHUB_OUTPUT
+
+          if [ -n "$LAST_TAG" ] && [ "$NEXT_TAG" = "$LAST_TAG" ]; then
+            echo "released=false" >> $GITHUB_OUTPUT
+            echo "No semantic release is required."
+          else
+            echo "released=true" >> $GITHUB_OUTPUT
+            echo "image_tag=$NEXT_TAG" >> $GITHUB_OUTPUT
+            echo "Releasing $NEXT_TAG"
+          fi
+
+      - name: Create Semantic Release
+        if: steps.release_plan.outputs.released == 'true'
+        run: semantic-release version
+
+      - name: Skip Docker Publish When No Release Is Needed
+        if: steps.release_plan.outputs.released != 'true'
+        run: echo "No new semantic version detected; skipping Docker publish."
+
+      - name: Set up Docker Buildx
+        if: steps.release_plan.outputs.released == 'true'
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        if: steps.release_plan.outputs.released == 'true'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+
+      - name: Build & Push Versioned Image
+        if: steps.release_plan.outputs.released == 'true'
+        env:
+          IMAGE_TAG: ${{ steps.release_plan.outputs.image_tag }}
+        run: |
+          docker build -t ${DOCKER_HUB_USERNAME}/phylo-parser:${IMAGE_TAG} .
+          docker push ${DOCKER_HUB_USERNAME}/phylo-parser:${IMAGE_TAG}
+
+          # Also update 'latest'
+          docker tag ${DOCKER_HUB_USERNAME}/phylo-parser:${IMAGE_TAG} ${DOCKER_HUB_USERNAME}/phylo-parser:latest
+          docker push ${DOCKER_HUB_USERNAME}/phylo-parser:latest
