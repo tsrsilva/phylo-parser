@@ -31,7 +31,7 @@ jobs:
       - name: Run Tool Test
         run: |
           # 1. Create host output directory
-          mkdir -p ${{ github.workspace }}/output_csv
+          mkdir -p ${{ github.workspace }}/outputs/csv
 
           # 2. Run the container with the CI config mounted over the default one
           docker run --rm \
@@ -40,7 +40,7 @@ jobs:
             phylo-parser:test
 
           # 3. Verify the output exists
-          if [ -f "${{ github.workspace }}/output_csv/minimal_full.csv" ]; then
+          if [ -f "${{ github.workspace }}/outputs/csv/minimal_full.csv" ]; then
             echo "✅ Test Passed: Output CSV generated successfully."
           else
             echo "❌ Test Failed: Output CSV not found."

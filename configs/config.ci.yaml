@@ -1,4 +1,4 @@
-# config.ci.yaml
+# config.ci.yaml — used only inside CI; outputs to subdirectories under outputs/
 
 input:
   data_dir: "data"
@@ -7,6 +7,6 @@ resources:
   dicts_dir: "dicts"
 
 output:
-  csv_dir: "output_csv"
-  json_dir: "output_json"
-  missing_dir: "missing_uris"
+  csv_dir: "outputs/csv"
+  json_dir: "outputs/json"
+  missing_dir: "outputs/missing"
