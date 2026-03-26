@@ -13,6 +13,9 @@ COPY requirements.txt ./
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Install curl
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
 # Copy application files (including LICENSES and configs)
 COPY . .
 
@@ -23,7 +26,7 @@ RUN mkdir -p /app/ontologies
 RUN curl -L -o /app/ontologies/pato.owl http://purl.obolibrary.org/obo/pato.owl && \
     curl -L -o /app/ontologies/hao.owl http://purl.obolibrary.org/obo/hao.owl && \
     curl -L -o /app/ontologies/uberon.owl http://purl.obolibrary.org/obo/uberon.owl
-    
+
 # Set environment variables for Python
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
