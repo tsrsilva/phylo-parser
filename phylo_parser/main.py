@@ -175,12 +175,12 @@ def main() -> None:
                     "_variable": None
                 }
 
-                # 1️⃣ First term = organism
+                # First term = organism
                 organism_term = char_text_s[0]
                 organism_id = ent_dict.get(organism_term) or syn_dict.get(organism_term, "")
                 char_text_d["_organism"] = (organism_term, organism_id)
 
-                # 2️⃣ Parse states first to detect neomorphic
+                # Parse states first to detect neomorphic
                 state_matches = re.findall(r'\s*([^\(\):;"]+?)\s*\((\d+)\)', state_text)
                 state_dict = {}
                 state_labels = []
@@ -314,19 +314,37 @@ def main() -> None:
             json.dump(final_json, f, indent=2)
 
         # ------------------ MISSING TERMS ------------------ #
-        missing = set()
-        for _, row in final_df.iterrows():
-            for col in final_df.columns:
-                if "_ID" in col and row[col] == "":
-                    label_col = col.replace("_ID", "_label")
-                    if label_col in final_df.columns:
-                        missing.add(row[label_col])
+        missing_by_category = {
+            "Organism": set(),
+            "Locator": set(),
+            "Variable": set(),
+            "State": set(),
+        }
+
+        for char_data in char_ls_dict.values():
+            organism_label, organism_uri = char_data["char_part"]["_organism"]
+            if organism_label and not organism_uri:
+                missing_by_category["Organism"].add(organism_label)
+
+            for locator_label, locator_uri in char_data["char_part"]["_locators"]:
+                if locator_label and not locator_uri:
+                    missing_by_category["Locator"].add(locator_label)
+
+            variable = char_data["char_part"]["_variable"]
+            if variable and variable[0] and not variable[1]:
+                missing_by_category["Variable"].add(variable[0])
+
+            for state in char_data["state_part"].values():
+                state_label, state_uri = next(iter(state.items()))
+                if state_label and not state_uri:
+                    missing_by_category["State"].add(state_label)
 
         with open(DIR_MISSING / f"{prefix}_missing_terms.csv", "w", newline="") as f:
             writer = csv.writer(f)
-            writer.writerow(["Missing term"])
-            for term in sorted(missing):
-                writer.writerow([term])
+            writer.writerow(["Category", "Missing term"])
+            for category, terms in missing_by_category.items():
+                for term in sorted(terms):
+                    writer.writerow([category, term])
     
     # ---- Process all TXT files ---- #
 
