@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 <!-- version list -->
 
+## v0.3.0 (2026-09-08)
+
+### Features
+
+- Missing terms grouped by category
+  ([`9371ce7`](https://github.com/tsrsilva/phylo-parser/commit/9371ce71a6c2c799e701503e56c19faf37eeb10c))
+
+
 ## v0.2.0 (2026-03-26)
 
 ### Bug Fixes
