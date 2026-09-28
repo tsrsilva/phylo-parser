@@ -2,6 +2,7 @@
 # Python
 # =========================
 __pycache__/
+phylo_parser/__pycache__/
 *.pyc
 *.pyo
 *.pyd
