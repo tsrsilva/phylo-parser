@@ -39,8 +39,8 @@ output_csv/
 output_json/
 missing_uris/
 
-# Optional: generated dicts if auto-created
-# dicts/
+# Generated dicts if auto-created
+dicts/
 
 # =========================
 # IDEs and editors
