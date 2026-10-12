@@ -62,18 +62,23 @@ def main() -> None:
 
     # Set base URL.
     obo_url = "http://purl.obolibrary.org/obo/"
+    # PMCK is not mirrored on the OBO purl server; it is served from GitHub as RDF/XML.
+    pmck_url = "https://raw.githubusercontent.com/tsrsilva/rdf-generator/main/data/ontologies/pmck.owl"
 
     # Initialize RDF graphs.
     aism_g = Graph()
     hao_g = Graph()
     bspo_g = Graph()
     pato_g = Graph()
+    pmck_g = Graph()
 
     # Parse base ontologies.
     aism_g.parse(obo_url + "aism.owl", format = "owl")
     hao_g.parse(obo_url + "hao.owl", format = "owl")
     bspo_g.parse(obo_url + "bspo.owl", format = "owl")
     pato_g.parse(obo_url + "pato.owl", format = "owl")
+    # rdflib cannot infer the format from the raw GitHub content type, so set it explicitly.
+    pmck_g.parse(pmck_url, format = "xml")
 
     def build_label_dict(graph):
         return {str(o): str(s) for s, _, o in graph.triples((None, RDFS.label, None))}
@@ -82,14 +87,18 @@ def main() -> None:
     hao_dict  = build_label_dict(hao_g)
     bspo_dict = build_label_dict(bspo_g)
     pato_dict = build_label_dict(pato_g)
+    # Normalize PMCK label keys (lowercase, trimmed) because parsed terms are lowercased before lookup.
+    pmck_dict = {str(o).strip().lower(): str(s) for s, _, o in pmck_g.triples((None, RDFS.label, None))}
 
-    ent_dict = aism_dict | hao_dict | bspo_dict | pato_dict
+    # PMCK merged last so project-specific mappings take precedence on label collisions.
+    ent_dict = aism_dict | hao_dict | bspo_dict | pato_dict | pmck_dict
 
     for name, dct in {
         "aism_dict": aism_dict,
         "hao_dict": hao_dict,
         "bspo_dict": bspo_dict,
         "pato_dict": pato_dict,
+        "pmck_dict": pmck_dict,
         "ent_dict": ent_dict
     }.items():
         with open(DIR_DICTS / f"{name}.json", "w") as f:
