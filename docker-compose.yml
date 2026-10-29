@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile
     container_name: phylo-parser
     volumes:
-      # Input data (includes your 'examples/' folder)
+      # Input data (includes 'examples/' folder)
       - ./data:/app/data:cached
       # Dictionaries
       - ./dicts:/app/dicts:cached
